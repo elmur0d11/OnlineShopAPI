@@ -1,0 +1,9 @@
+﻿services:
+  app-seq:
+    image: datalust/seq:latest
+    container_name: app-seq
+    environment:
+       - ACCEPT_EULA=Y
+    ports:
+       - 5341:5341
+       - 8089:80 
