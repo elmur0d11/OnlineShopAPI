@@ -39,7 +39,21 @@ namespace OnlineShopAPIFull.Controllers
         {
             try
             {
+                var cacheNames = _cacheService.GetData<IEnumerable<Product>>("products");
+
+                if (cacheNames != null)
+                {
+                    Console.WriteLine("CACHE HIT! > USER");
+                    return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(cacheNames));
+                }
+
+
+                Console.WriteLine("CACHE MISS! > USER");
                 var products = await _productRepository.GetAll();
+
+                var expiryTime = DateTime.UtcNow.AddMinutes(5);
+
+                _cacheService.SetData("products", products, expiryTime);
 
                 return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(products));
             }

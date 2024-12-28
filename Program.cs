@@ -1,7 +1,10 @@
+using Hangfire;
+using Hangfire.Storage.SQLite;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopAPIFull.Data;
 using OnlineShopAPIFull.Services;
 using OnlineShopAPIFull.Services.Caching;
+using OnlineShopAPIFull.Services.Hangfire;
 using OnlineShopAPIFull.Services.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +17,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options.UseNpgsql(
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IBuyedProductRepository, BuyedProductRepository>();
 builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddTransient<IServiceManagement, ServiceManagement>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -23,6 +27,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHangfire(config => config
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseSQLiteStorage(builder.Configuration.GetConnectionString("HangfireDb")));
+
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -38,5 +49,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseHangfireDashboard("/hangfire");
 
 app.Run();

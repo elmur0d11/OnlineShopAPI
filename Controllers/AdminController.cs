@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using AutoMapper.Configuration.Annotations;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShopAPIFull.Dtos;
 using OnlineShopAPIFull.Models;
 using OnlineShopAPIFull.Services;
 using OnlineShopAPIFull.Services.Caching;
+using OnlineShopAPIFull.Services.Hangfire;
 using Serilog;
 
 namespace OnlineShopAPIFull.Controllers
@@ -21,8 +23,8 @@ namespace OnlineShopAPIFull.Controllers
         private readonly ICacheService _cacheService;
 
         public AdminController(
-            ICacheService cacheService, 
-            IMapper mapper, 
+            ICacheService cacheService,
+            IMapper mapper,
             IProductRepository productRepository,
             IBuyedProductRepository buyedProductRepository)
         {
@@ -39,9 +41,24 @@ namespace OnlineShopAPIFull.Controllers
         {
             try
             {
+                var cacheNames = _cacheService.GetData<IEnumerable<Product>>("products");
+
+                if (cacheNames != null)
+                {
+                    Console.WriteLine("CACHE HIT!");
+                    return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(cacheNames));
+                }
+
+
+                Console.WriteLine("CACHE MISS!");
                 var products = await _productRepository.GetAll();
 
+                var expiryTime = DateTime.UtcNow.AddMinutes(5);
+
+                _cacheService.SetData("products", products, expiryTime);
+
                 return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(products));
+
             }
             catch (Exception ex)
             {
@@ -61,7 +78,11 @@ namespace OnlineShopAPIFull.Controllers
 
             var productReadDto = _mapper.Map<ProductReadDto>(productModel);
 
+            BackgroundJob.Enqueue<IServiceManagement>(
+                service => service.RefreshCacheAsync());
+
             return Created("", productModel);
+            
         }
         #endregion
 
@@ -74,7 +95,7 @@ namespace OnlineShopAPIFull.Controllers
                 var cacheKey = $"products_{id}";
 
                 var cachedProduct = _cacheService.GetData<Product>(cacheKey);
-                if(cachedProduct != null)
+                if (cachedProduct != null)
                 {
                     Console.WriteLine("Cache HIT!");
                     return Ok(_mapper.Map<ProductReadDto>(cachedProduct));
@@ -103,7 +124,7 @@ namespace OnlineShopAPIFull.Controllers
         {
             var productModelFromRepo = await _productRepository.Get(id);
 
-            if(productModelFromRepo == null)
+            if (productModelFromRepo == null)
                 return NotFound();
 
             var cacheKey = $"{id}";
