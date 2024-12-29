@@ -1,5 +1,8 @@
 # ASP.NET CORE WEBAPI Online Shop API
 
+> [!TIP]
+> Added Hangfire for auto get data from db and set it to the cache . I Add it just for FUN )
+
 ## USED
 > C#
 >
@@ -10,6 +13,8 @@
 > IMemoryCache
 >
 > Serilog
+>
+> Hangfire
 
 ## Before run project!
 ```
