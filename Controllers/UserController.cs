@@ -7,6 +7,8 @@ using OnlineShopAPIFull.Dtos;
 using OnlineShopAPIFull.Models;
 using Serilog;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Hangfire;
+using OnlineShopAPIFull.Services.Hangfire;
 
 namespace OnlineShopAPIFull.Controllers
 {
@@ -67,7 +69,7 @@ namespace OnlineShopAPIFull.Controllers
 
         #region GetById
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetName(int id)
+        public async Task<IActionResult> GetProductById(int id)
         {
             try
             {
@@ -109,6 +111,9 @@ namespace OnlineShopAPIFull.Controllers
 
             var productReadDto = _mapper.Map<BuyedProductReadDto>(productModel);
 
+            BackgroundJob.Enqueue<IServiceManagement>(
+                service => service.RefreshCacheAsync());
+
             return Created("", productModel);
 
         }
@@ -120,7 +125,21 @@ namespace OnlineShopAPIFull.Controllers
         {
             try
             {
+                var cacheNames = _cacheService.GetData<IEnumerable<BuyedProduct>>("products");
+
+                if (cacheNames != null)
+                {
+                    Console.WriteLine("CACHE HIT! > USER");
+                    return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(cacheNames));
+                }
+
+
+                Console.WriteLine("CACHE MISS! > USER");
                 var products = await _buyedProductRepository.GetAll();
+
+                var expiryTime = DateTime.UtcNow.AddMinutes(5);
+
+                _cacheService.SetData("products", products, expiryTime);
 
                 return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(products));
             }

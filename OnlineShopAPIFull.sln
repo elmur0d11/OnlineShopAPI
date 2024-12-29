@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineShopAPIFull", "OnlineShopAPIFull.csproj", "{C1C2DF21-A46B-4E49-9F3A-35CF9EB41D3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineShopAPI.Tests", "D:\Projects\VS22\OnlineShopAPI.Tests\OnlineShopAPI.Tests.csproj", "{A801EB6E-24BA-40EE-9D23-22DA215FB690}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C1C2DF21-A46B-4E49-9F3A-35CF9EB41D3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1C2DF21-A46B-4E49-9F3A-35CF9EB41D3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1C2DF21-A46B-4E49-9F3A-35CF9EB41D3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A801EB6E-24BA-40EE-9D23-22DA215FB690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A801EB6E-24BA-40EE-9D23-22DA215FB690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A801EB6E-24BA-40EE-9D23-22DA215FB690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A801EB6E-24BA-40EE-9D23-22DA215FB690}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
