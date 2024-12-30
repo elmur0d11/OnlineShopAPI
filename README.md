@@ -1,6 +1,10 @@
 # ASP.NET CORE WEBAPI Online Shop API
 
-> [!TIP]
+### Commit 12/30/2024
+> [!NOTE]
+> Writen Unit Tests to Controllers
+### Commit 12/28/2024
+> [!NOTE]
 > Added Hangfire for auto get data about cache. I Add it just for FUN )
 
 ## USED
