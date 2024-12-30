@@ -1,13 +1,9 @@
 ﻿using AutoMapper;
-using AutoMapper.Configuration.Annotations;
-using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShopAPIFull.Dtos;
 using OnlineShopAPIFull.Models;
 using OnlineShopAPIFull.Services;
 using OnlineShopAPIFull.Services.Caching;
-using OnlineShopAPIFull.Services.Hangfire;
 using Serilog;
 
 namespace OnlineShopAPIFull.Controllers
@@ -44,13 +40,8 @@ namespace OnlineShopAPIFull.Controllers
                 var cacheNames = _cacheService.GetData<IEnumerable<Product>>("products");
 
                 if (cacheNames != null)
-                {
-                    Console.WriteLine("CACHE HIT!");
                     return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(cacheNames));
-                }
 
-
-                Console.WriteLine("CACHE MISS!");
                 var products = await _productRepository.GetAll();
 
                 var expiryTime = DateTime.UtcNow.AddMinutes(5);
@@ -62,7 +53,7 @@ namespace OnlineShopAPIFull.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound($"Server Chichvordi! >> {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
         #endregion
@@ -78,8 +69,7 @@ namespace OnlineShopAPIFull.Controllers
 
             var productReadDto = _mapper.Map<ProductReadDto>(productModel);
 
-            BackgroundJob.Enqueue<IServiceManagement>(
-                service => service.RefreshCacheAsync());
+            _cacheService.RemoveData("products");
 
             return Created("", productModel);
             
@@ -88,21 +78,19 @@ namespace OnlineShopAPIFull.Controllers
 
         #region GetById
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetName(int id)
+        public async Task<IActionResult> GetProductById(int id)
         {
             try
             {
                 var cacheKey = $"products_{id}";
 
                 var cachedProduct = _cacheService.GetData<Product>(cacheKey);
-                if (cachedProduct != null)
-                {
-                    Console.WriteLine("Cache HIT!");
-                    return Ok(_mapper.Map<ProductReadDto>(cachedProduct));
-                }
 
-                Console.WriteLine("Cache MISS!");
+                if (cachedProduct != null)
+                    return Ok(_mapper.Map<ProductReadDto>(cachedProduct));
+
                 var product = await _productRepository.Get(id);
+
                 if (product == null)
                     return NotFound();
 
@@ -113,7 +101,7 @@ namespace OnlineShopAPIFull.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound(ex);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
         #endregion
@@ -144,14 +132,24 @@ namespace OnlineShopAPIFull.Controllers
         {
             try
             {
+
+                var cacheNames = _cacheService.GetData<IEnumerable<BuyedProduct>>("buyedProducts");
+
+                if (cacheNames != null)
+                    return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(cacheNames));
+
                 var products = await _buyedProductRepository.GetAll();
+
+                var expiryTime = DateTime.UtcNow.AddMinutes(5);
+
+                _cacheService.SetData("buyedProducts", products, expiryTime);
 
                 return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(products));
             }
             catch (Exception ex)
             {
                 Log.Error($"Error-From-Admin-{ex}");
-                return NotFound($"{ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
         #endregion

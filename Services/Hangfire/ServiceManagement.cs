@@ -16,28 +16,17 @@ namespace OnlineShopAPIFull.Services.Hangfire
             _context = context;
         }
 
-        public async Task RefreshCacheAsync()
+        public async Task GetCacheData()
         {
-            Console.WriteLine("Start refreshing cache...");
+            var products = _cacheService.GetData<IEnumerable<Product>>("products");
+            var buyedProducts = _cacheService.GetData<IEnumerable<BuyedProduct>>("buyedProducts");
 
-            try
+            if (products != null && buyedProducts != null)
             {
-                _cacheService.RemoveData("products");
-
-                var products = await _context.Products.ToListAsync();
-
-                var cacheKey = "products";
-
-                var expiryTime = DateTimeOffset.Now.AddMinutes(5);
-
-                _cacheService.SetData(cacheKey, products, expiryTime);
-
-                Console.WriteLine("Cache successfully refreshed!");
+                Console.WriteLine("You have the data in cache..");
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error with refreshing cache: {ex.Message}");
-            }
+
+            Console.WriteLine("Cache is clear!");
         }
     }
 }

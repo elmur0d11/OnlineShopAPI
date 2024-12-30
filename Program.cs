@@ -1,5 +1,6 @@
 using Hangfire;
 using Hangfire.Storage.SQLite;
+using HangfireBasicAuthenticationFilter;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopAPIFull.Data;
 using OnlineShopAPIFull.Services;
@@ -50,6 +51,19 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard("/hangfire", new DashboardOptions()
+{
+    DashboardTitle = "DriversDashboard",
+    Authorization = new[]
+    {
+        new HangfireCustomBasicAuthenticationFilter()
+        {
+            Pass = "exotic",
+            User = "elmur0d"
+        }
+    }
+});
+
+RecurringJob.AddOrUpdate<IServiceManagement>(x => x.GetCacheData(), "*/1 * * * *");
 
 app.Run();

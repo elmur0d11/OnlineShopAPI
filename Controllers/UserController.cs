@@ -1,14 +1,10 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShopAPIFull.Services.Caching;
 using OnlineShopAPIFull.Services;
 using OnlineShopAPIFull.Dtos;
 using OnlineShopAPIFull.Models;
 using Serilog;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Hangfire;
-using OnlineShopAPIFull.Services.Hangfire;
 
 namespace OnlineShopAPIFull.Controllers
 {
@@ -44,13 +40,8 @@ namespace OnlineShopAPIFull.Controllers
                 var cacheNames = _cacheService.GetData<IEnumerable<Product>>("products");
 
                 if (cacheNames != null)
-                {
-                    Console.WriteLine("CACHE HIT! > USER");
                     return Ok(_mapper.Map<IEnumerable<ProductReadDto>>(cacheNames));
-                }
 
-
-                Console.WriteLine("CACHE MISS! > USER");
                 var products = await _productRepository.GetAll();
 
                 var expiryTime = DateTime.UtcNow.AddMinutes(5);
@@ -77,12 +68,8 @@ namespace OnlineShopAPIFull.Controllers
 
                 var cachedProduct = _cacheService.GetData<Product>(cacheKey);
                 if (cachedProduct != null)
-                {
-                    Console.WriteLine("Cache HIT!");
                     return Ok(_mapper.Map<ProductReadDto>(cachedProduct));
-                }
 
-                Console.WriteLine("Cache MISS!");
                 var product = await _productRepository.Get(id);
                 if (product == null)
                     return NotFound();
@@ -111,8 +98,7 @@ namespace OnlineShopAPIFull.Controllers
 
             var productReadDto = _mapper.Map<BuyedProductReadDto>(productModel);
 
-            BackgroundJob.Enqueue<IServiceManagement>(
-                service => service.RefreshCacheAsync());
+            _cacheService.RemoveData("buyedProducts");
 
             return Created("", productModel);
 
@@ -125,21 +111,16 @@ namespace OnlineShopAPIFull.Controllers
         {
             try
             {
-                var cacheNames = _cacheService.GetData<IEnumerable<BuyedProduct>>("products");
+                var cacheNames = _cacheService.GetData<IEnumerable<BuyedProduct>>("buyedProducts");
 
                 if (cacheNames != null)
-                {
-                    Console.WriteLine("CACHE HIT! > USER");
                     return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(cacheNames));
-                }
 
-
-                Console.WriteLine("CACHE MISS! > USER");
                 var products = await _buyedProductRepository.GetAll();
 
                 var expiryTime = DateTime.UtcNow.AddMinutes(5);
 
-                _cacheService.SetData("products", products, expiryTime);
+                _cacheService.SetData("buyedProducts", products, expiryTime);
 
                 return Ok(_mapper.Map<IEnumerable<BuyedProductReadDto>>(products));
             }

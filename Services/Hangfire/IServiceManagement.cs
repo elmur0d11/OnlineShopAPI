@@ -2,6 +2,6 @@
 {
     public interface IServiceManagement
     {
-        Task RefreshCacheAsync();
+        Task GetCacheData();
     }
 }
