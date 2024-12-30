@@ -19,6 +19,9 @@
 > Serilog
 >
 > Hangfire
+>
+> xUnit
+
 
 ## Before run project!
 ```
