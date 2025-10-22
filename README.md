@@ -16,7 +16,7 @@
 >
 > IMemoryCache
 >
-> Serilog
+> Redis
 >
 > Hangfire
 >
